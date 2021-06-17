@@ -1,48 +1,29 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
+	"strconv"
 	"net/http"
-	"encoding/json"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/tiago123456789/api-golang/repositories"
 )
 
-type SuccessResponse struct {
-	Message string `json:"message"`
-}
-
-type People struct {
-	Name string `json:name`
-	Age int `json:age`
-}
-
-var peoples []People
-
-func sendSuccess(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	successResponse := SuccessResponse{ Message: "Success!!!!!" }
-	json.NewEncoder(w).Encode(&successResponse)
-}
-
-func createPeople(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var people People
-	_ = json.NewDecoder(r.Body).Decode(&people)
-	peoples = append(peoples, people);
-	json.NewEncoder(w).Encode(&peoples);
-}
-
-func getPeoples(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(&peoples);
-}
 
 func main() {
-	router := mux.NewRouter()
+	e := echo.New()
 
-	router.HandleFunc("/", sendSuccess).Methods("GET")
-	router.HandleFunc("/peoples", createPeople).Methods("POST")
-	router.HandleFunc("/peoples", getPeoples).Methods("GET")
+	userRepository := repositories.NewUserRepository()
 
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+  
+	// Routes
+	e.POST("/users", userRepository.CreateUser)
+	e.GET("/users/:id", userRepository.GetUserById)
+	e.PUT("/users/:id", userRepository.UpdateUser)
+	e.GET("/users", userRepository.GetUsers)
 
-	http.ListenAndServe(":8000", router);
+	// Start server
+	e.Logger.Fatal(e.Start(":8000"))
 }

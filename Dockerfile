@@ -8,5 +8,4 @@ RUN go mod download
 
 RUN go build -o /go/src/app/application
 
-
 CMD ["/go/src/app/application"]
